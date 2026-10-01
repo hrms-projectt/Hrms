@@ -1,103 +1,82 @@
 package com.hrms.backend.controller;
 
-import com.hrms.backend.dto.OrganizationDTO;
 import com.hrms.backend.entity.Organization;
-import com.hrms.backend.service.OrganizationService;
-import org.springframework.http.MediaType;
+import com.hrms.backend.entity.User;
+import com.hrms.backend.repository.OrganizationRepository;
+import com.hrms.backend.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/organizations")
+// UPDATED BASE ROUTE to include /v1/
+@RequestMapping("/api/v1/organizations")
 public class OrganizationController {
 
-    private final OrganizationService organizationService;
+    private final OrganizationRepository organizationRepository;
+    private final UserRepository userRepository;
 
-    public OrganizationController(OrganizationService organizationService) {
-        this.organizationService = organizationService;
+    // Inject UserRepository to validate the Super Admin requirement
+    public OrganizationController(OrganizationRepository organizationRepository, UserRepository userRepository) {
+        this.organizationRepository = organizationRepository;
+        this.userRepository = userRepository;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, String>> createOrganization(
-            @RequestParam("name") String name,
-            @RequestParam("address") String address,
-            @RequestParam("contactEmail") String contactEmail,
-            @RequestParam(value = "logo", required = false) MultipartFile logoFile) {
+    // REVERTED TO @RequestBody FOR JSON PAYLOAD
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createOrganization(@RequestBody Organization organization) {
         
-        try {
-            Organization org = new Organization();
-            org.setName(name);
-            org.setAddress(address);
-            org.setContactEmail(contactEmail);
-
-            if (logoFile != null && !logoFile.isEmpty()) {
-                String uploadDir = "uploads/logos/";
-                Path uploadPath = Paths.get(uploadDir);
-                
-                if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-                }
-
-                String fileName = UUID.randomUUID().toString() + "_" + logoFile.getOriginalFilename();
-                Path filePath = uploadPath.resolve(fileName);
-                Files.copy(logoFile.getInputStream(), filePath);
-                
-                org.setLogoPath(uploadDir + fileName);
-            }
-
-            organizationService.saveOrganization(org);
-            
-            // RETURN TINTU'S EXACT REQUESTED JSON
-            return ResponseEntity.ok(Collections.singletonMap("message", "Organization saved successfully"));
-
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    Collections.singletonMap("message", "Failed to create organization: " + e.getMessage())
-            );
+        // TASK N-3 VALIDATION: Check if a Super Admin exists for this organization
+        // Assuming the 'contactEmail' provided in the form corresponds to the Admin's login email
+        Optional<User> adminUserOpt = userRepository.findByEmail(organization.getContactEmail());
+        
+        if (adminUserOpt.isEmpty() || !"SUPER_ADMIN".equals(adminUserOpt.get().getRole())) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Validation Failed: A valid SUPER_ADMIN user must exist with the provided contact email before creating the organization.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
+
+        // Save the organization (including the S3 logoUrl sent from the frontend)
+        Organization savedOrg = organizationRepository.save(organization);
+
+        // Build the success response matching Srilekha's request
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Organization created successfully");
+        response.put("id", savedOrg.getId());
+
+        return ResponseEntity.ok(response);
     }
 
+    // ADDED NEW ENDPOINT: Fetch a single organization by ID (Task N-3)
+    @GetMapping("/{id}")
+    public ResponseEntity<Organization> getOrganizationById(@PathVariable Long id) {
+        return organizationRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // EXISTING ENDPOINT: Get all organizations
     @GetMapping
-    public ResponseEntity<List<OrganizationDTO>> getAllOrganizations() {
-        List<Organization> organizations = organizationService.getAllOrganizations();
-        
-        List<OrganizationDTO> safeData = organizations.stream()
-                .map(org -> new OrganizationDTO(
-                        org.getId(),
-                        org.getName(),
-                        org.getAddress(),
-                        org.getContactEmail()
-                ))
-                .toList();
-
-        return ResponseEntity.ok(safeData);
+    public ResponseEntity<List<Organization>> getAllOrganizations() {
+        return ResponseEntity.ok(organizationRepository.findAll());
     }
-    
+
+    // ADDED UPDATE ENDPOINT: For future edits
     @PutMapping("/{id}")
-    public ResponseEntity<OrganizationDTO> updateOrganization(@PathVariable Long id, @RequestBody Organization orgDetails) {
-        Organization updatedOrg = organizationService.updateOrganization(id, orgDetails);
-        
-        OrganizationDTO safeData = new OrganizationDTO(
-                updatedOrg.getId(),
-                updatedOrg.getName(),
-                updatedOrg.getAddress(),
-                updatedOrg.getContactEmail()
-        );
-        return ResponseEntity.ok(safeData);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteOrganization(@PathVariable Long id) {
-        organizationService.deleteOrganization(id);
-        return ResponseEntity.ok("Organization deleted successfully.");
+    public ResponseEntity<Organization> updateOrganization(@PathVariable Long id, @RequestBody Organization orgDetails) {
+        return organizationRepository.findById(id)
+                .map(existingOrg -> {
+                    existingOrg.setName(orgDetails.getName());
+                    existingOrg.setLogoUrl(orgDetails.getLogoUrl()); // Now an S3 URL string
+                    existingOrg.setAddress(orgDetails.getAddress());
+                    existingOrg.setContactEmail(orgDetails.getContactEmail());
+                    return ResponseEntity.ok(organizationRepository.save(existingOrg));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }

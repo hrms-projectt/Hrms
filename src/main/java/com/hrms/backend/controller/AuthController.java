@@ -5,7 +5,6 @@ import com.hrms.backend.repository.UserRepository;
 import com.hrms.backend.security.JwtUtil;
 import com.hrms.backend.service.TokenBlacklistService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,18 +18,19 @@ import java.util.Optional;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    // Added the new TokenBlacklistService
-    @Autowired
-    private TokenBlacklistService tokenBlacklistService;
+    // Standard Constructor Injection (Solves the warning, no Lombok required)
+    public AuthController(JwtUtil jwtUtil, UserRepository userRepository, 
+                          PasswordEncoder passwordEncoder, TokenBlacklistService tokenBlacklistService) {
+        this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.tokenBlacklistService = tokenBlacklistService;
+    }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials) {
@@ -82,7 +82,6 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    // Updated Logout to use the Blacklist
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(HttpServletRequest request) {
         Map<String, String> response = new HashMap<>();
@@ -91,7 +90,6 @@ public class AuthController {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
             
-            // Save the token to the database blacklist
             tokenBlacklistService.blacklistToken(token);
             
             response.put("message", "Logged out successfully.");
