@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,21 +14,48 @@ import {
   Settings,
   LogOut,
   Building2,
+  UserPlus,
+  Briefcase, // NEW
 } from "lucide-react";
 import { logoutUser } from "../../services/authService";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
+  const [role, setRole] = useState("");
   const pathname = usePathname();
+
+  useEffect(() => {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      setRole(user.role || "");
+    } catch {
+      setRole("");
+    }
+  }, []);
 
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Employees", href: "/employees", icon: Users },
     { name: "Attendance", href: "/attendance", icon: CalendarCheck },
     { name: "Leave Management", href: "/leave", icon: UserCheck },
+    { name: "Recruitment", href: "/recruitment", icon: Briefcase }, // NEW
     { name: "Reports", href: "/reports", icon: FileText },
+    { name: "Organization", href: "/organization", icon: Building2 },
+    { name: "Add User", href: "/users/new", icon: UserPlus },
     { name: "Settings", href: "/settings", icon: Settings },
   ];
+
+  // Pages listed here are visible only to these roles.
+  // Pages not listed are visible to everyone.
+  const roleAccess = {
+    "/organization": ["SUPER_ADMIN"],
+    "/users/new": ["SUPER_ADMIN"],
+    "/recruitment": ["SUPER_ADMIN", "HR_ADMIN"], // NEW
+  };
+
+  const visibleItems = menuItems.filter(
+    (item) => !roleAccess[item.href] || roleAccess[item.href].includes(role)
+  );
 
   const handleLogout = async () => {
     try {
@@ -85,7 +112,7 @@ export default function Sidebar() {
           )}
 
           <nav className="space-y-1">
-            {menuItems.map((item) => {
+            {visibleItems.map((item) => {
               const Icon = item.icon;
 
               const isActive =
