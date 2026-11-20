@@ -1,33 +1,18 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { request } from "./api";
 
-export const createOrganization = async (payload) => {
-  const token = localStorage.getItem("token");
+// All organization URLs live here (base URL comes from NEXT_PUBLIC_API_URL in .env.local)
+const ORGANIZATIONS = "/api/v1/organizations";
+const UPLOAD_LOGO = "/api/v1/s3/upload-logo";
 
-  const response = await fetch(`${API_URL}/api/organizations`,  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-    },
-    body: JSON.stringify(payload),
-  });
+// POST /api/v1/organizations
+// body: { name, contactEmail, logoUrl, address: { street, city, state, country, pincode } }
+export const createOrganization = (payload) =>
+  request(ORGANIZATIONS, { method: "POST", body: JSON.stringify(payload) });
 
-  let data = {};
-  try {
-    data = await response.json();
-  } catch {}
-
-  if (!response.ok) {
-    const details = data.errors
-      ? Object.values(data.errors).flat().join(", ")
-      : "";
-    throw new Error(
-      data.message ||
-        details ||
-        data.title ||
-        `Request failed (${response.status})`
-    );
-  }
-
-  return data;
+// POST /api/v1/s3/upload-logo   (multipart, field name: file)   ->  { url }
+// Upload the logo first, then send the returned url as logoUrl when saving the organization.
+export const uploadLogo = (file) => {
+  const form = new FormData();
+  form.append("file", file);
+  return request(UPLOAD_LOGO, { method: "POST", body: form });
 };

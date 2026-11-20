@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { LogOut } from "lucide-react";
 import { logoutUser } from "../../services/authService";
+import ThemeToggle from "./ThemeToggle";
+import RoleBadge from "./RoleBadge";
 
 export default function Header() {
   const [user, setUser] = useState(null);
@@ -48,9 +50,11 @@ export default function Header() {
             <p className="text-sm font-medium text-slate-100">
               {user?.fullName || "User"}
             </p>
-            <p className="text-xs text-sky-400">{user?.role || "User"}</p>
+            <RoleBadge role={user?.role} />
           </div>
         </div>
+
+        <ThemeToggle />
 
         <button
           onClick={handleLogout}

@@ -63,7 +63,15 @@ export default function LoginPage() {
       // save token and user
       localStorage.setItem("token", data.token);
       if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // backend may send role as text OR as an object { id, name }
+        const roleName =
+          data.user.role && typeof data.user.role === "object"
+            ? data.user.role.name
+            : data.user.role;
+        localStorage.setItem(
+          "user",
+          JSON.stringify({ ...data.user, role: roleName })
+        );
       }
 
       // show the success message for a moment, then go to dashboard
@@ -82,7 +90,7 @@ export default function LoginPage() {
 
   return (
     <div
-      className={`${poppins.className} relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b1020] px-4 py-8 text-slate-200`}
+            className={`${poppins.className} themed relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b1020] px-4 py-8 text-slate-200`}
     >
       {/* animations used on this page */}
       <style>{`
@@ -253,6 +261,15 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          <div className="mt-5 flex items-center justify-between text-sm">
+            <Link href="/forgot-password" className="text-sky-400 transition hover:text-sky-300">
+              Forgot password?
+            </Link>
+            <Link href="/signup" className="text-slate-400 transition hover:text-white">
+              Create account
+            </Link>
+          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-500">

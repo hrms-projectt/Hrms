@@ -38,3 +38,80 @@ input {
 ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
 }
+
+/* =====================================================================
+   THEME  (dark = default look, light = overrides below)
+   The toggle sets <html data-theme="dark|light">.
+   Only elements inside a ".themed" wrapper (MainLayout + login page)
+   are restyled, so the landing page keeps its own design.
+   ===================================================================== */
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* page + panels */
+html[data-theme="light"] .themed.bg-\[\#0b1020\],
+html[data-theme="light"] .themed .bg-\[\#0b1020\] { background-color: #f1f5f9; }
+html[data-theme="light"] .themed .bg-\[\#0b1020\]\/90 { background-color: rgba(241, 245, 249, 0.92); }
+html[data-theme="light"] .themed .bg-\[\#080d1a\] { background-color: #ffffff; }
+html[data-theme="light"] .themed .bg-\[\#111833\],
+html[data-theme="light"] .themed .bg-\[\#0f1a2e\] { background-color: #ffffff; }
+html[data-theme="light"] .themed .bg-white\/5 { background-color: #ffffff; }
+html[data-theme="light"] .themed .bg-white\/10 { background-color: rgba(15, 23, 42, 0.08); }
+html[data-theme="light"] .themed .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.05); }
+html[data-theme="light"] .themed .hover\:bg-white\/10:hover { background-color: rgba(15, 23, 42, 0.08); }
+html[data-theme="light"] .themed .bg-black\/30 { background-color: #e2e8f0; }
+html[data-theme="light"] .themed .bg-slate-900\/60,
+html[data-theme="light"] .themed .bg-slate-900 { background-color: #ffffff; }
+html[data-theme="light"] .themed .bg-slate-800 { background-color: #e0f2fe; }
+html[data-theme="light"] .themed .bg-slate-700\/40 { background-color: #e2e8f0; }
+html[data-theme="light"] .themed .hover\:bg-slate-700\/70:hover { background-color: #cbd5e1; }
+html[data-theme="light"] .themed .shadow-xl,
+html[data-theme="light"] .themed .shadow-2xl { box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12); }
+
+/* borders */
+html[data-theme="light"] .themed .border-white\/10 { border-color: #e2e8f0; }
+html[data-theme="light"] .themed .border-white\/15 { border-color: #cbd5e1; }
+
+/* text */
+html[data-theme="light"] .themed .text-white,
+html[data-theme="light"] .themed .hover\:text-white:hover { color: #0f172a; }
+html[data-theme="light"] .themed .text-slate-100 { color: #0f172a; }
+html[data-theme="light"] .themed .text-slate-200 { color: #1e293b; }
+html[data-theme="light"] .themed .text-slate-300 { color: #334155; }
+html[data-theme="light"] .themed .text-slate-400,
+html[data-theme="light"] .themed .text-slate-500 { color: #64748b; }
+html[data-theme="light"] .themed .text-slate-600 { color: #94a3b8; }
+html[data-theme="light"] .themed .hover\:text-slate-300:hover { color: #334155; }
+html[data-theme="light"] .themed .placeholder\:text-slate-500::placeholder { color: #94a3b8; }
+html[data-theme="light"] .themed input::placeholder,
+html[data-theme="light"] .themed textarea::placeholder { color: #94a3b8; }
+
+/* coloured text (darker so it is readable on white) */
+html[data-theme="light"] .themed .text-sky-300 { color: #0369a1; }
+html[data-theme="light"] .themed .text-sky-400 { color: #0284c7; }
+html[data-theme="light"] .themed .text-green-300 { color: #15803d; }
+html[data-theme="light"] .themed .text-green-400 { color: #16a34a; }
+html[data-theme="light"] .themed .text-green-200\/80,
+html[data-theme="light"] .themed .text-green-400\/80 { color: #166534; }
+html[data-theme="light"] .themed .text-red-300 { color: #b91c1c; }
+html[data-theme="light"] .themed .text-red-400 { color: #dc2626; }
+html[data-theme="light"] .themed .text-orange-300 { color: #c2410c; }
+html[data-theme="light"] .themed .text-purple-400 { color: #7c3aed; }
+html[data-theme="light"] .themed .text-orange-400 { color: #ea580c; }
+html[data-theme="light"] .themed .text-yellow-400 { color: #a16207; }
+html[data-theme="light"] .themed .hover\:text-red-300:hover,
+html[data-theme="light"] .themed .hover\:text-red-400:hover { color: #dc2626; }
+
+/* text on solid coloured buttons / badges must stay white */
+html[data-theme="light"] .themed .bg-sky-500.text-white,
+html[data-theme="light"] .themed .bg-green-500.text-white,
+html[data-theme="light"] .themed .bg-red-500.text-white,
+html[data-theme="light"] .themed .bg-orange-500.text-white { color: #ffffff; }
+
+/* sidebar logout hover + dropdown options */
+html[data-theme="light"] .themed option { background-color: #ffffff; color: #0f172a; }
